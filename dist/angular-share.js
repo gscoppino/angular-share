@@ -184,7 +184,7 @@ function ShareOptionsDirective() {
                   </a>\
                 </li>\
                 <li ng-if="ctrl.toggleOptions.length" class="divider"></li>\
-                <li ng-repeat="option in ::ctrl.toggleOptions" ng-click="ctrl.toggleOption(option)">\
+                <li ng-repeat="option in ::ctrl.toggleOptions track by option.key" ng-click="ctrl.toggleOption(option)">\
                   <a href="#">\
                     <span class="fa" ng-class="{\'fa-check-square-o\': option.value, \'fa-square-o\': !option.value}"></span>\
                     <span>{{ option.label }}</span>\
@@ -246,7 +246,7 @@ function CustomShareOptionsFactory($uibModal) {
                             <h2>Who Can See This?</h2>\
                         </div>\
                         <div class="panel-body">\
-                            <div ng-repeat="option in ::ctrl.customOptions">\
+                            <div ng-repeat="option in ::ctrl.customOptions track by option.key">\
                                 <label>{{ option.label }}</label>\
                                 <button class="btn btn-primary btn-xs">Remove All</button>\
                                 <md-contact-chips\
