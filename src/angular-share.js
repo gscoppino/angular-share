@@ -222,6 +222,7 @@ function CustomShareOptionsController($http, $uibModalInstance, customOptions) {
     ctrl.customOptions = customOptions;
 
     ctrl.getEntities = function (query, option) {
+        if (!option.query_url) { return []; }
         return $http.get(option.query_url, { query: query});
     };
 
