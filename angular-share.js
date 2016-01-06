@@ -1,4 +1,4 @@
-function ShareOptionsController() {
+function ShareOptionsController(CustomShareOptionsModal) {
 
     if (!angular.isObject(this.model) || !this.field || !angular.isArray(this.options)) { return; }
 
@@ -7,6 +7,9 @@ function ShareOptionsController() {
     var ctrl = this;
 
     // Configure our scope.
+
+    ctrl.uibDropdownOpen = undefined; // When set to false, programmatically closes the dropdown control.
+
     ctrl.currentSettings = undefined; // text overview of current sharing options.
 
     ctrl.toggleOptions = undefined; // all share options that are boolean flags by nature.
@@ -29,7 +32,7 @@ function ShareOptionsController() {
             ctrl.model[ctrl.field][shareOption.key] = ctrl.model[ctrl.field][shareOption.key] || shareOption.value;
 
             if (shareOption.type === 'boolean') {
-                toggleOptions.push(shareOption);
+                toggleOptions.push(angular.copy(shareOption));
 
                 if (shareOption.value === true) {
                     ctrl.active_options_count++;
@@ -120,19 +123,43 @@ function ShareOptionsController() {
     };
 
     ctrl.openCustomOptionsModal = function () {
-        var modal = CustomOptionsService.openModal({
-            customOptions: ctrl.customOptions
-        });
+        ctrl.uibDropdownOpen = false; // Close the dropdown control.
+        var modal = CustomShareOptionsModal.open(ctrl.customOptions);
 
         modal.result.then(function (customOptions) {
+            var checkCustom = false;
             angular.forEach(customOptions, function (shareOption) {
+
                 // Diff the old custom options with the new ones
                 // to update active options counter.
+                var correspondingShareOption = ctrl.customOptions.filter(function (opt) {
+                    return opt.key === shareOption.key;
+                })[0];
+
+                if (shareOption.value.length) {
+                    checkCustom = true;
+                }
+
+                if (shareOption.value.length && !correspondingShareOption.value.length) {
+                    ctrl.active_options_count++;
+                } else if (!shareOption.value.length && correspondingShareOption.value.length) {
+                    ctrl.active_options_count--;
+                }
 
                 // Update the original model.
+                ctrl.model[ctrl.field][shareOption.key].value = shareOption.value;
 
                 // Set the new custom options on the controller
+                correspondingShareOption.value = shareOption.value;
             });
+
+            if (checkCustom) {
+                ctrl.has_custom_option = true;
+            } else {
+                ctrl.has_custom_option = false;
+            }
+
+            ctrl.updateCurrentSettings();
         });
     };
 
@@ -144,7 +171,7 @@ function ShareOptionsDirective() {
     return {
         scope: {},
         template: '\
-            <div uib-dropdown auto-close="outsideClick">\
+            <div uib-dropdown auto-close="outsideClick" is-open="ctrl.uibDropdownOpen">\
               <button type="button" class="btn btn-default" uib-dropdown-toggle>\
                 <span>{{ ctrl.currentSettings }}</span>\
                 <span class="caret"></span>\
@@ -164,7 +191,7 @@ function ShareOptionsDirective() {
                   </a>\
                 </li>\
                 <li ng-if="ctrl.customOptions.length" class="divider"></li>\
-                <li ng-if="ctrl.customOptions.length">\
+                <li ng-if="ctrl.customOptions.length" ng-click="ctrl.openCustomOptionsModal()">\
                   <a href="#">\
                     <span class="fa fa-cog"></span>\
                     <span>Custom</span>\
@@ -183,5 +210,84 @@ function ShareOptionsDirective() {
     };
 }
 
-angular.module('angular-share', ['ui.bootstrap'])
+
+angular.module('angular-share', ['ui.bootstrap', 'angular-share.modal'])
     .directive('sharingOptions', ShareOptionsDirective);
+
+//=============================================================================//
+
+function CustomShareOptionsController($http, $uibModalInstance, customOptions) {
+    var ctrl = this;
+
+    ctrl.customOptions = customOptions;
+
+    ctrl.getEntities = function (query, option) {
+        return $http.get(option.query_url, { query: query});
+    };
+
+    ctrl.propagateChanges = function () {
+        $uibModalInstance.close(ctrl.customOptions); // pass the custom permissions back.
+    };
+
+    ctrl.close = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+}
+
+function CustomShareOptionsFactory($uibModal) {
+    var CustomShareOptionsModal = function () {
+        this.modalInstance = null;
+
+        this.open = function (customOptions) {
+            this.modalInstance = $uibModal.open({
+                template: '\
+                    <div class="panel panel-primary">\
+                        <div class="panel-heading">\
+                            <h2>Who Can See This?</h2>\
+                        </div>\
+                        <div class="panel-body">\
+                            <div ng-repeat="option in ::ctrl.customOptions">\
+                                <label>{{ option.label }}</label>\
+                                <button class="btn btn-primary btn-xs">Remove All</button>\
+                                <md-contact-chips\
+                                    ng-model="option.value"\
+                                    md-contacts="ctrl.getEntities($query, option)"\
+                                    md-contact-name="display_name"\
+                                    md-require-match="true"\
+                                    filter-selected="true"\
+                                    placeholder="Share..."\
+                                    secondary-placeholder="Add {{ option.label }}...">\
+                                </md-contact-chips>\
+                                <hr>\
+                            </div>\
+                            <div class="text-right">\
+                                <button type="button" class="btn btn-primary" ng-click="ctrl.close()">Cancel</button>\
+                                <button type="button" class="btn btn-success" ng-click="ctrl.propagateChanges()">OK</button>\
+                            </div>\
+                        </div>\
+                    </div>\
+                ',
+                backdrop: true,
+                controller: CustomShareOptionsController,
+                controllerAs: 'ctrl',
+                bindToController: true,
+                resolve: {
+                    customOptions: function () {
+                        return angular.copy(customOptions);
+                    }
+                }
+            });
+
+            return this.modalInstance;
+        };
+
+        this.close = function () {
+            modalInstance.dismiss('terminated');
+        };
+    };
+
+    return new CustomShareOptionsModal();
+}
+
+angular.module('angular-share.modal', ['ui.bootstrap', 'material.components.chips'])
+    .factory('CustomShareOptionsModal', CustomShareOptionsFactory);

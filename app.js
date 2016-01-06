@@ -1,4 +1,4 @@
-angular.module('test', ['angular-share'])
+angular.module('test', ['angular-share', 'ngMaterial'])
   .directive('test', function () {
     return {
       scope: {},
@@ -34,13 +34,13 @@ angular.module('test', ['angular-share'])
 	    key: 'users',
 	    label: 'Users',
 	    type: 'collection',
-	    value: []
+	    value: [1]
 	  },
 	  {
 	    key: 'groups',
 	    label: 'Groups',
 	    type: 'collection',
-	    value: []
+	    value: [1, 2]
 	  }
 	];
       },
