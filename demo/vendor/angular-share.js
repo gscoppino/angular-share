@@ -246,12 +246,12 @@ function CustomShareOptionsFactory($uibModal) {
         this.open = function (customOptions) {
             this.modalInstance = $uibModal.open({
                 template: '\
-                    <div class="panel panel-primary">\
+                    <div style="margin-bottom: 0;" class="panel panel-primary">\
                         <div class="panel-heading">\
                             <h2>Who Can See This?</h2>\
                         </div>\
                         <div class="panel-body">\
-                            <div ng-repeat="option in ::ctrl.customOptions track by option.key">\
+                            <div style="margin: 1em;" ng-repeat="option in ::ctrl.customOptions track by option.key">\
                                 <label>{{ option.label }}</label>\
                                 <button class="btn btn-primary btn-xs" ng-click="ctrl.clearList(option)">Remove All</button>\
                                 <md-contact-chips\
@@ -260,10 +260,9 @@ function CustomShareOptionsFactory($uibModal) {
                                     md-contact-name="display_name"\
                                     md-require-match="true"\
                                     filter-selected="true"\
-                                    placeholder="Share..."\
+                                    placeholder="Share with {{ option.label }}..."\
                                     secondary-placeholder="Add {{ option.label }}...">\
                                 </md-contact-chips>\
-                                <hr>\
                             </div>\
                             <div class="text-right">\
                                 <button type="button" class="btn btn-primary" ng-click="ctrl.close()">Cancel</button>\
