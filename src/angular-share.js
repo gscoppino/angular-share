@@ -221,6 +221,10 @@ function CustomShareOptionsController($http, $uibModalInstance, customOptions) {
 
     ctrl.customOptions = customOptions;
 
+    ctrl.clearList = function (option) {
+        option.value = [];
+    };
+
     ctrl.getEntities = function (query, option) {
         if (!option.query_url) { return []; }
         return $http.get(option.query_url, { query: query});
@@ -249,7 +253,7 @@ function CustomShareOptionsFactory($uibModal) {
                         <div class="panel-body">\
                             <div ng-repeat="option in ::ctrl.customOptions track by option.key">\
                                 <label>{{ option.label }}</label>\
-                                <button class="btn btn-primary btn-xs">Remove All</button>\
+                                <button class="btn btn-primary btn-xs" ng-click="ctrl.clearList(option)">Remove All</button>\
                                 <md-contact-chips\
                                     ng-model="option.value"\
                                     md-contacts="ctrl.getEntities($query, option)"\
