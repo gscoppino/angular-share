@@ -10,12 +10,13 @@ angular.module('test', ['angular-share'])
 	  id: 1,
 	  name: 'Test Resource Model'
 	};
+
 	$scope.$watch(function () {
 	  return ctrl.resourceModel;
 	}, function (newVal, oldVal) {
 	  console.log("New Model Value: ", newVal);
 	}, true);
-	
+
 	ctrl.shareOptions = [
 	  {
 	    key: 'family',

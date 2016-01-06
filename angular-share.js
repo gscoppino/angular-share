@@ -1,13 +1,13 @@
 function shareOptionsController() {
 
-  if (!angular.isObject(this.model) || !this.field || !angular.isArray(this.options)) { return; } 
+  if (!angular.isObject(this.model) || !this.field || !angular.isArray(this.options)) { return; }
 
-  /**************/ 
+  /**************/
 
   var ctrl = this;
 
   // Configure our scope.
-  ctrl.currentSettings = undefined; // text overview of current sharing options. 
+  ctrl.currentSettings = undefined; // text overview of current sharing options.
   ctrl.toggleOptions = undefined; // all share options that are boolean flags by nature.
   ctrl.customOptions = undefined; // all share options that are collections of entities by nature.
   ctrl.active_permissions_count = 0; // counter to keep track of how many permissions are set.
@@ -57,12 +57,12 @@ function shareOptionsController() {
       ctrl.currentSettings = "Custom";
       return;
     }
-    
+
     if (ctrl.active_permissions_count === 0) {
       ctrl.currentSettings = "Only Me";
       return;
     }
-    
+
     ctrl.currentSettings = ctrl.active_toggle_permissions.join(', ');
   };
 
@@ -77,14 +77,14 @@ function shareOptionsController() {
 
     } else {
 
-      ctrl.active_permissions_count--; 
+      ctrl.active_permissions_count--;
       ctrl.active_toggle_permissions.splice(ctrl.active_toggle_permissions.indexOf(shareOption.label), 1);
 
     }
 
     ctrl.updateCurrentSettings();
   };
-  
+
   // Initialize
   initialize();
 }
@@ -101,16 +101,22 @@ angular.module('angular-share', ['ui.bootstrap'])
 	  </button>\
 	  <ul class="uib-dropdown-menu">\
 	    <li ng-repeat="option in ::ctrl.toggleOptions" ng-click="ctrl.toggleOption(option)">\
-              <a href="#">{{ option.label }}</a>\
+              <a href="#">\
+                <span class="fa" ng-class="{\'fa-check-square-o\': option.value, \'fa-square-o\': !option.value}"></span>\
+                <span>{{ option.label }}</span>\
+              </a>\
 	    </li>\
 	    <li ng-if="ctrl.toggleOptions.length && ctrl.customOptions.length" class="divider"></li>\
 	    <li ng-if="ctrl.customOptions.length">\
-	      <a href="#">Custom</a>\
+	      <a href="#">\
+          <span class="fa fa-cog"></span>\
+          <span>Custom</span>\
+        </a>\
 	    </li>\
 	  </ul>\
 	</div>\
       ',
-      controller: shareOptionsController, 
+      controller: shareOptionsController,
       controllerAs: 'ctrl',
       bindToController: {
         model: '=',
