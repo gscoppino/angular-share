@@ -1,4 +1,4 @@
-function shareOptionsController() {
+function ShareOptionsController() {
 
     if (!angular.isObject(this.model) || !this.field || !angular.isArray(this.options)) { return; }
 
@@ -140,46 +140,48 @@ function shareOptionsController() {
     initialize();
 }
 
+function ShareOptionsDirective() {
+    return {
+        scope: {},
+        template: '\
+            <div uib-dropdown auto-close="outsideClick">\
+              <button type="button" class="btn btn-default" uib-dropdown-toggle>\
+                <span>{{ ctrl.currentSettings }}</span>\
+                <span class="caret"></span>\
+              </button>\
+              <ul class="uib-dropdown-menu">\
+                <li ng-click="ctrl.clearSetOptions()">\
+                  <a href="#">\
+                    <span class="fa" ng-class="{\'fa-check-square-o\': ctrl.active_options_count === 0, \'fa-square-o\': ctrl.active_options_count > 0}"></span>\
+                    <span>Only Me</span>\
+                  </a>\
+                </li>\
+                <li ng-if="ctrl.toggleOptions.length" class="divider"></li>\
+                <li ng-repeat="option in ::ctrl.toggleOptions" ng-click="ctrl.toggleOption(option)">\
+                  <a href="#">\
+                    <span class="fa" ng-class="{\'fa-check-square-o\': option.value, \'fa-square-o\': !option.value}"></span>\
+                    <span>{{ option.label }}</span>\
+                  </a>\
+                </li>\
+                <li ng-if="ctrl.customOptions.length" class="divider"></li>\
+                <li ng-if="ctrl.customOptions.length">\
+                  <a href="#">\
+                    <span class="fa fa-cog"></span>\
+                    <span>Custom</span>\
+                  </a>\
+                </li>\
+              </ul>\
+            </div>\
+        ',
+        controller: ShareOptionsController,
+        controllerAs: 'ctrl',
+        bindToController: {
+            model: '=',
+            field: '@',
+            options: '='
+        }
+    };
+}
+
 angular.module('angular-share', ['ui.bootstrap'])
-    .directive('sharingOptions', function () {
-        return {
-            scope: {},
-            template: '\
-                <div uib-dropdown auto-close="outsideClick">\
-                  <button type="button" class="btn btn-default" uib-dropdown-toggle>\
-                    <span>{{ ctrl.currentSettings }}</span>\
-                    <span class="caret"></span>\
-                  </button>\
-                  <ul class="uib-dropdown-menu">\
-                    <li ng-click="ctrl.clearSetOptions()">\
-                      <a href="#">\
-                        <span class="fa" ng-class="{\'fa-check-square-o\': ctrl.active_options_count === 0, \'fa-square-o\': ctrl.active_options_count > 0}"></span>\
-                        <span>Only Me</span>\
-                      </a>\
-                    </li>\
-                    <li ng-if="ctrl.toggleOptions.length" class="divider"></li>\
-                    <li ng-repeat="option in ::ctrl.toggleOptions" ng-click="ctrl.toggleOption(option)">\
-                      <a href="#">\
-                        <span class="fa" ng-class="{\'fa-check-square-o\': option.value, \'fa-square-o\': !option.value}"></span>\
-                        <span>{{ option.label }}</span>\
-                      </a>\
-                    </li>\
-                    <li ng-if="ctrl.customOptions.length" class="divider"></li>\
-                    <li ng-if="ctrl.customOptions.length">\
-                      <a href="#">\
-                        <span class="fa fa-cog"></span>\
-                        <span>Custom</span>\
-                      </a>\
-                    </li>\
-                  </ul>\
-                </div>\
-            ',
-            controller: shareOptionsController,
-            controllerAs: 'ctrl',
-            bindToController: {
-                model: '=',
-                field: '@',
-                options: '='
-            }
-        };
-    });
+    .directive('sharingOptions', ShareOptionsDirective);
