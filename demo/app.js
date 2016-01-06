@@ -8,7 +8,13 @@ angular.module('test', ['angular-share', 'ngMaterial'])
 
                 ctrl.resourceModel = {
                     id: 1,
-                    name: 'Test Resource Model'
+                    name: 'Test Resource Model',
+                    permissions: {
+                        family: true,
+                        staff: false,
+                        users: [1, 3],
+                        groups: [1, 2]
+                    }
                 };
 
                 $scope.$watch(function () {

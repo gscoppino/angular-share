@@ -30,6 +30,7 @@ function ShareOptionsController(CustomShareOptionsModal) {
             if (!shareOption.key) { return; }
 
             ctrl.model[ctrl.field][shareOption.key] = ctrl.model[ctrl.field][shareOption.key] || shareOption.value;
+            shareOption.value = ctrl.model[ctrl.field][shareOption.key] || shareOption.value;
 
             if (shareOption.type === 'boolean') {
                 toggleOptions.push(angular.copy(shareOption));
