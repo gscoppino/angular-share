@@ -26,11 +26,16 @@ function ShareOptionsController(CustomShareOptionsModal) {
         ctrl.model[ctrl.field] = angular.isObject(ctrl.model[ctrl.field]) ? ctrl.model[ctrl.field] : {};
 
         ctrl.currentSettings = "Loading...";
-        angular.forEach(ctrl.options, function (shareOption) {
+        angular.forEach(angular.copy(ctrl.options), function (shareOption) {
             if (!shareOption.key) { return; }
 
-            ctrl.model[ctrl.field][shareOption.key] = ctrl.model[ctrl.field][shareOption.key] || shareOption.value;
-            shareOption.value = ctrl.model[ctrl.field][shareOption.key] || shareOption.value;
+            // Set fields on the model to default if not existing,
+            // otherwise use existing values.
+            if (ctrl.model[ctrl.field][shareOption.key]) {
+                shareOption.value = ctrl.model[ctrl.field][shareOption.key];
+            } else {
+                ctrl.model[ctrl.field][shareOption.key] = shareOption.value;
+            }
 
             if (shareOption.type === 'boolean') {
                 toggleOptions.push(angular.copy(shareOption));
