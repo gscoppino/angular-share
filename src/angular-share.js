@@ -147,7 +147,7 @@ function ShareOptionsController(CustomShareOptionsModal) {
                 }
 
                 // Update the original model.
-                ctrl.model[ctrl.field][shareOption.key].value = shareOption.value;
+                ctrl.model[ctrl.field][shareOption.key] = shareOption.value;
 
                 // Set the new custom options on the controller
                 correspondingShareOption.value = shareOption.value;
