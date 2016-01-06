@@ -85,6 +85,37 @@ function shareOptionsController() {
     ctrl.updateCurrentSettings();
   };
 
+  ctrl.clearToggleOptions = function () {
+    angular.forEach(ctrl.toggleOptions, function (shareOption) {
+      ctrl.model[ctrl.field][shareOption.key] = false; // Update the model
+      if (shareOption.value === true) {
+        shareOption.value = false; // Update the view
+        ctrl.active_permissions_count--;
+      }
+    });
+
+    ctrl.active_toggle_permissions = [];
+    ctrl.updateCurrentSettings();
+  };
+
+  ctrl.clearCustomOptions = function () {
+    angular.forEach(ctrl.customOptions, function (shareOption) {
+      ctrl.model[ctrl.field][shareOption.key] = []; // Update the model
+      if (shareOption.value.length) {
+        shareOption.value = []; // Update the view
+        ctrl.active_permissions_count--;
+      }
+    });
+
+    ctrl.has_custom_permission = false;
+    ctrl.updateCurrentSettings();
+  };
+
+  ctrl.clearSetOptions = function () {
+    ctrl.clearToggleOptions();
+    ctrl.clearCustomOptions();
+  };
+
   // Initialize
   initialize();
 }
@@ -100,13 +131,20 @@ angular.module('angular-share', ['ui.bootstrap'])
 	    <span class="caret"></span>\
 	  </button>\
 	  <ul class="uib-dropdown-menu">\
+      <li ng-click="ctrl.clearSetOptions()">\
+        <a href="#">\
+          <span class="fa" ng-class="{\'fa-check-square-o\': ctrl.active_permissions_count === 0, \'fa-square-o\': ctrl.active_permissions_count > 0}"></span>\
+          <span>Only Me</span>\
+        </a>\
+      </li>\
+      <li ng-if="ctrl.toggleOptions.length" class="divider"></li>\
 	    <li ng-repeat="option in ::ctrl.toggleOptions" ng-click="ctrl.toggleOption(option)">\
               <a href="#">\
                 <span class="fa" ng-class="{\'fa-check-square-o\': option.value, \'fa-square-o\': !option.value}"></span>\
                 <span>{{ option.label }}</span>\
               </a>\
 	    </li>\
-	    <li ng-if="ctrl.toggleOptions.length && ctrl.customOptions.length" class="divider"></li>\
+	    <li ng-if="ctrl.customOptions.length" class="divider"></li>\
 	    <li ng-if="ctrl.customOptions.length">\
 	      <a href="#">\
           <span class="fa fa-cog"></span>\
