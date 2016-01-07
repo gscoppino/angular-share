@@ -18,18 +18,22 @@ function ShareOptionsController(CustomShareOptionsModal) {
     ctrl.active_options_count = 0; // counter to keep track of how many options are set.
     ctrl.active_toggle_options = []; // array of string for currently active toggle options.
 
-    ctrl.has_custom_option = undefined; // flag to indicate that custom options are in use.
+    ctrl.active_custom_option = undefined; // flag to indicate that custom options are in use.
 
     // Initialize.
     function initialize() {
-        var toggleOptions = [], customOptions = [];
+        var toggleOptions = [], customOptions = []; // temp variables to write to before applying the data to the controller.
+
+        // Make sure that the specified field for the provided model is defined as an object store.
         ctrl.model[ctrl.field] = angular.isObject(ctrl.model[ctrl.field]) ? ctrl.model[ctrl.field] : {};
 
         ctrl.currentSettings = "Loading...";
+        // Examine all the provided sharing options.
+        // angular.copy is used to avoid modifying the parent scope options.
         angular.forEach(angular.copy(ctrl.options), function (shareOption) {
             if (!shareOption.key) { return; }
 
-            // Set fields on the model to default if not existing,
+            // Set sharing options on the model to default values if not existing,
             // otherwise use existing values.
             if (ctrl.model[ctrl.field][shareOption.key]) {
                 shareOption.value = ctrl.model[ctrl.field][shareOption.key];
@@ -37,8 +41,13 @@ function ShareOptionsController(CustomShareOptionsModal) {
                 ctrl.model[ctrl.field][shareOption.key] = shareOption.value;
             }
 
+            // Push the sharing option to the appropriate store on the controller,
+            // based on its type.
+            // 'boolean' -> toggleable in the dropdown control.
+            // 'collection' -> editable in the modal control.
+
             if (shareOption.type === 'boolean') {
-                toggleOptions.push(angular.copy(shareOption));
+                toggleOptions.push(shareOption);
 
                 if (shareOption.value === true) {
                     ctrl.active_options_count++;
@@ -46,26 +55,31 @@ function ShareOptionsController(CustomShareOptionsModal) {
                 }
 
             } else if (shareOption.type === 'collection') {
-                customOptions.push(angular.copy(shareOption));
+                customOptions.push(shareOption);
 
                 if (shareOption.value.length) {
                     ctrl.active_options_count++;
 
-                    if (!ctrl.has_custom_option) {
-                        ctrl.has_custom_option = true;
+                    if (!ctrl.active_custom_option) {
+                        ctrl.active_custom_option = true;
                     }
                 }
             }
         });
 
+        // Bind the sharing options to the controller.
         ctrl.toggleOptions = toggleOptions;
         ctrl.customOptions = customOptions;
+
+        // Update the overview text displayed in the dropdown button.
         ctrl.updateCurrentSettings();
     }
 
     // Controller API
+
+    // Updates the overview text displayed in the dropdown button.
     ctrl.updateCurrentSettings = function () {
-        if (ctrl.has_custom_option) {
+        if (ctrl.active_custom_option) {
             ctrl.currentSettings = "Custom";
             return;
         }
@@ -78,6 +92,8 @@ function ShareOptionsController(CustomShareOptionsModal) {
         ctrl.currentSettings = ctrl.active_toggle_options.join(', ');
     };
 
+    // Toggles a toggleable sharing option. Updates the bound model
+    // with the new value.
     ctrl.toggleOption = function (shareOption) {
         ctrl.model[ctrl.field][shareOption.key] = !shareOption.value; // Update the model
         shareOption.value = !shareOption.value; // Update the view
@@ -97,6 +113,8 @@ function ShareOptionsController(CustomShareOptionsModal) {
         ctrl.updateCurrentSettings();
     };
 
+    // Sets all toggleable sharing options to false. Updates the bound
+    // model with the new values.
     ctrl.clearToggleOptions = function () {
         angular.forEach(ctrl.toggleOptions, function (shareOption) {
             ctrl.model[ctrl.field][shareOption.key] = false; // Update the model
@@ -110,6 +128,8 @@ function ShareOptionsController(CustomShareOptionsModal) {
         ctrl.updateCurrentSettings();
     };
 
+    // Sets all custom sharing options to empty lists. Updates the bound
+    // model with thee new values.
     ctrl.clearCustomOptions = function () {
         angular.forEach(ctrl.customOptions, function (shareOption) {
             ctrl.model[ctrl.field][shareOption.key] = []; // Update the model
@@ -119,15 +139,20 @@ function ShareOptionsController(CustomShareOptionsModal) {
             }
         });
 
-        ctrl.has_custom_option = false;
+        ctrl.active_custom_option = false;
         ctrl.updateCurrentSettings();
     };
 
+    // Clears all sharing options to an empty state.
+    // No permissions shall be active.
     ctrl.clearSetOptions = function () {
         ctrl.clearToggleOptions();
         ctrl.clearCustomOptions();
     };
 
+    // Opens the custom sharing options modal, passing it
+    // the sharing options. The modal will make a copy of our sharing
+    // options and later return that copy with the new values.
     ctrl.openCustomOptionsModal = function () {
         ctrl.uibDropdownOpen = false; // Close the dropdown control.
         var modal = CustomShareOptionsModal.open(ctrl.customOptions);
@@ -137,7 +162,8 @@ function ShareOptionsController(CustomShareOptionsModal) {
             angular.forEach(customOptions, function (shareOption) {
 
                 // Diff the old custom options with the new ones
-                // to update active options counter.
+                // to update active options counter, and whether
+                // custom permissions are set.
                 var correspondingShareOption = ctrl.customOptions.filter(function (opt) {
                     return opt.key === shareOption.key;
                 })[0];
@@ -160,9 +186,9 @@ function ShareOptionsController(CustomShareOptionsModal) {
             });
 
             if (checkCustom) {
-                ctrl.has_custom_option = true;
+                ctrl.active_custom_option = true;
             } else {
-                ctrl.has_custom_option = false;
+                ctrl.active_custom_option = false;
             }
 
             ctrl.updateCurrentSettings();
@@ -225,21 +251,28 @@ angular.module('angular-share', ['ui.bootstrap', 'angular-share.modal'])
 function CustomShareOptionsController($http, $uibModalInstance, customOptions) {
     var ctrl = this;
 
+    // Store resolve value on controller for easy access.
     ctrl.customOptions = customOptions;
 
+    // Clears the list for a custom sharing option.
     ctrl.clearList = function (option) {
         option.value = [];
     };
 
-    ctrl.getEntities = function (query, option) {
-        if (!option.query_url) { return []; }
-        return $http.get(option.query_url, { query: query});
+    // Access the HTTP resource for a sharing option and
+    // returns a promise for the values.
+    ctrl.getResource = function (resource, query) {
+        if (!resource) { return []; }
+        return $http.get(resource, { query: query});
     };
 
+    // Sends the new custom sharing options configuration
+    // to the callee.
     ctrl.propagateChanges = function () {
         $uibModalInstance.close(ctrl.customOptions); // pass the custom permissions back.
     };
 
+    // Dismisses the modal.
     ctrl.close = function () {
         $uibModalInstance.dismiss('cancel');
     };
@@ -262,7 +295,7 @@ function CustomShareOptionsFactory($uibModal) {
                                 <button class="btn btn-primary btn-xs" ng-click="ctrl.clearList(option)">Remove All</button>\
                                 <md-contact-chips\
                                     ng-model="option.value"\
-                                    md-contacts="ctrl.getEntities($query, option)"\
+                                    md-contacts="ctrl.getResource(option.resource, $query)"\
                                     md-contact-name="display_name"\
                                     md-require-match="true"\
                                     filter-selected="true"\
@@ -291,6 +324,8 @@ function CustomShareOptionsFactory($uibModal) {
             return this.modalInstance;
         };
 
+        // Easily accessible helper function for the instantiater of
+        // a modal to conveniently close it.
         this.close = function () {
             modalInstance.dismiss('terminated');
         };
