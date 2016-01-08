@@ -327,7 +327,7 @@ function CustomShareOptionsFactory($uibModal) {
         // Easily accessible helper function for the instantiater of
         // a modal to conveniently close it.
         this.close = function () {
-            modalInstance.dismiss('terminated');
+            this.modalInstance.dismiss('terminated');
         };
     };
 
