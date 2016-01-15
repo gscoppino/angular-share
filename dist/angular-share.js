@@ -1,6 +1,9 @@
+angular.module("angular-share.templates", []).run(["$templateCache", function($templateCache) {$templateCache.put("templates/dropdown/dropdown.html","<div uib-dropdown auto-close=\"outsideClick\" is-open=\"ctrl.uibDropdownOpen\">\n  <button type=\"button\" class=\"btn btn-default\" uib-dropdown-toggle>\n    <span>{{ ctrl.currentSettings }}</span>\n    <span class=\"caret\"></span>\n  </button>\n  <ul class=\"uib-dropdown-menu\">\n    <li ng-click=\"ctrl.clearSetOptions()\">\n      <a href=\"#\">\n        <span class=\"fa\" ng-class=\"{\'fa-check-square-o\': ctrl.active_options_count === 0, \'fa-square-o\': ctrl.active_options_count > 0}\"></span>\n        <span>Only Me</span>\n      </a>\n    </li>\n    <li ng-if=\"ctrl.toggleOptions.length\" class=\"divider\"></li>\n    <li ng-repeat=\"option in ::ctrl.toggleOptions track by option.key\" ng-click=\"ctrl.toggleOption(option)\">\n      <a href=\"#\">\n        <span class=\"fa\" ng-class=\"{\'fa-check-square-o\': option.value, \'fa-square-o\': !option.value}\"></span>\n        <span>{{ option.label }}</span>\n      </a>\n    </li>\n    <li ng-if=\"ctrl.customOptions.length\" class=\"divider\"></li>\n    <li ng-if=\"ctrl.customOptions.length\" ng-click=\"ctrl.openCustomOptionsModal()\">\n      <a href=\"#\">\n        <span class=\"fa fa-cog\"></span>\n        <span>Custom</span>\n      </a>\n    </li>\n  </ul>\n</div>");
+$templateCache.put("templates/modal/modal.html","<div style=\"margin-bottom: 0;\" class=\"panel panel-primary\">\n    <div class=\"panel-heading\">\n        <h2>Who Can See This?</h2>\n    </div>\n    <div class=\"panel-body\">\n        <div style=\"margin: 1em;\" ng-repeat=\"option in ::ctrl.customOptions track by option.key\">\n            <label>{{ option.label }}</label>\n            <button class=\"btn btn-primary btn-xs\" ng-click=\"ctrl.clearList(option)\">Remove All</button>\n            <md-contact-chips\n                ng-model=\"option.value\"\n                md-contacts=\"ctrl.getResource(option.resource, $query)\"\n                md-contact-name=\"display_name\"\n                md-require-match=\"true\"\n                filter-selected=\"true\"\n                placeholder=\"Share with {{ option.label }}...\"\n                secondary-placeholder=\"Add {{ option.label }}...\">\n            </md-contact-chips>\n        </div>\n        <div class=\"text-right\">\n            <button type=\"button\" class=\"btn btn-primary\" ng-click=\"ctrl.close()\">Cancel</button>\n            <button type=\"button\" class=\"btn btn-success\" ng-click=\"ctrl.propagateChanges()\">OK</button>\n        </div>\n    </div>\n</div>");}]);
 angular.module('angular-share', [
     'angular-share.dropdown',
-    'angular-share.modal'
+    'angular-share.modal',
+    'angular-share.templates'
 ]);
 function ShareOptionsController(CustomShareOptionsModal) {
 
@@ -206,36 +209,7 @@ function ShareOptionsController(CustomShareOptionsModal) {
 function ShareOptionsDropdown() {
     return {
         scope: {},
-        template: '\
-            <div uib-dropdown auto-close="outsideClick" is-open="ctrl.uibDropdownOpen">\
-              <button type="button" class="btn btn-default" uib-dropdown-toggle>\
-                <span>{{ ctrl.currentSettings }}</span>\
-                <span class="caret"></span>\
-              </button>\
-              <ul class="uib-dropdown-menu">\
-                <li ng-click="ctrl.clearSetOptions()">\
-                  <a href="#">\
-                    <span class="fa" ng-class="{\'fa-check-square-o\': ctrl.active_options_count === 0, \'fa-square-o\': ctrl.active_options_count > 0}"></span>\
-                    <span>Only Me</span>\
-                  </a>\
-                </li>\
-                <li ng-if="ctrl.toggleOptions.length" class="divider"></li>\
-                <li ng-repeat="option in ::ctrl.toggleOptions track by option.key" ng-click="ctrl.toggleOption(option)">\
-                  <a href="#">\
-                    <span class="fa" ng-class="{\'fa-check-square-o\': option.value, \'fa-square-o\': !option.value}"></span>\
-                    <span>{{ option.label }}</span>\
-                  </a>\
-                </li>\
-                <li ng-if="ctrl.customOptions.length" class="divider"></li>\
-                <li ng-if="ctrl.customOptions.length" ng-click="ctrl.openCustomOptionsModal()">\
-                  <a href="#">\
-                    <span class="fa fa-cog"></span>\
-                    <span>Custom</span>\
-                  </a>\
-                </li>\
-              </ul>\
-            </div>\
-        ',
+        templateUrl: 'templates/dropdown/dropdown.html',
         controller: ShareOptionsController,
         controllerAs: 'ctrl',
         bindToController: {
@@ -287,32 +261,7 @@ function CustomShareOptionsFactory($uibModal) {
 
         this.open = function (customOptions) {
             this.modalInstance = $uibModal.open({
-                template: '\
-                    <div style="margin-bottom: 0;" class="panel panel-primary">\
-                        <div class="panel-heading">\
-                            <h2>Who Can See This?</h2>\
-                        </div>\
-                        <div class="panel-body">\
-                            <div style="margin: 1em;" ng-repeat="option in ::ctrl.customOptions track by option.key">\
-                                <label>{{ option.label }}</label>\
-                                <button class="btn btn-primary btn-xs" ng-click="ctrl.clearList(option)">Remove All</button>\
-                                <md-contact-chips\
-                                    ng-model="option.value"\
-                                    md-contacts="ctrl.getResource(option.resource, $query)"\
-                                    md-contact-name="display_name"\
-                                    md-require-match="true"\
-                                    filter-selected="true"\
-                                    placeholder="Share with {{ option.label }}..."\
-                                    secondary-placeholder="Add {{ option.label }}...">\
-                                </md-contact-chips>\
-                            </div>\
-                            <div class="text-right">\
-                                <button type="button" class="btn btn-primary" ng-click="ctrl.close()">Cancel</button>\
-                                <button type="button" class="btn btn-success" ng-click="ctrl.propagateChanges()">OK</button>\
-                            </div>\
-                        </div>\
-                    </div>\
-                ',
+                templateUrl: 'templates/modal/modal.html',
                 backdrop: true,
                 controller: CustomShareOptionsController,
                 controllerAs: 'ctrl',

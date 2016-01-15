@@ -3,6 +3,8 @@
     var connect = require('gulp-connect');
     var eslint = require('gulp-eslint');
     var concat = require('gulp-concat');
+    var angularTemplateCache = require('gulp-angular-templatecache');
+    var merge = require('merge-stream');
 
     gulp.task('lint', function () {
         return gulp.src(['src/**/*.js'])
@@ -10,12 +12,25 @@
             .pipe(eslint.format('stylish'));
     });
 
-    gulp.task('build', ['lint'], function () {
-        return gulp.src(['src/**/*.js'])
+    gulp.task('build:angular', ['lint'], function () {
+
+        var scripts = gulp.src(['src/**/*.js'])
+            .pipe(concat('angular-share.js'));
+
+        var templates = gulp.src(['src/**/*.html'])
+            .pipe(angularTemplateCache('angular-share.js', {
+                module: 'angular-share.templates',
+                root: 'templates',
+                standalone: true
+            }));
+
+        return merge(scripts, templates)
             .pipe(concat('angular-share.js'))
             .pipe(gulp.dest('dist'))
             .pipe(gulp.dest('demo/vendor'));
     });
+
+    gulp.task('build', ['build:angular']);
 
     gulp.task('build:watch', ['build'], function () {
         connect.server({

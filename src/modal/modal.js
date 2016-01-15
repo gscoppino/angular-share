@@ -34,32 +34,7 @@ function CustomShareOptionsFactory($uibModal) {
 
         this.open = function (customOptions) {
             this.modalInstance = $uibModal.open({
-                template: '\
-                    <div style="margin-bottom: 0;" class="panel panel-primary">\
-                        <div class="panel-heading">\
-                            <h2>Who Can See This?</h2>\
-                        </div>\
-                        <div class="panel-body">\
-                            <div style="margin: 1em;" ng-repeat="option in ::ctrl.customOptions track by option.key">\
-                                <label>{{ option.label }}</label>\
-                                <button class="btn btn-primary btn-xs" ng-click="ctrl.clearList(option)">Remove All</button>\
-                                <md-contact-chips\
-                                    ng-model="option.value"\
-                                    md-contacts="ctrl.getResource(option.resource, $query)"\
-                                    md-contact-name="display_name"\
-                                    md-require-match="true"\
-                                    filter-selected="true"\
-                                    placeholder="Share with {{ option.label }}..."\
-                                    secondary-placeholder="Add {{ option.label }}...">\
-                                </md-contact-chips>\
-                            </div>\
-                            <div class="text-right">\
-                                <button type="button" class="btn btn-primary" ng-click="ctrl.close()">Cancel</button>\
-                                <button type="button" class="btn btn-success" ng-click="ctrl.propagateChanges()">OK</button>\
-                            </div>\
-                        </div>\
-                    </div>\
-                ',
+                templateUrl: 'templates/modal/modal.html',
                 backdrop: true,
                 controller: CustomShareOptionsController,
                 controllerAs: 'ctrl',
