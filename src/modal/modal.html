@@ -8,8 +8,8 @@
             <button class="btn btn-primary btn-xs" ng-click="ctrl.clearList(option)">Remove All</button>
             <md-contact-chips
                 ng-model="option.value"
-                md-contacts="ctrl.getResource(option.resource, $query)"
-                md-contact-name="display_name"
+                md-contacts="ctrl.getSearchResults(option, $query)"
+                md-contact-name="{{ ::ctrl.resultsMap[option.key]() }}"
                 md-require-match="true"
                 filter-selected="true"
                 placeholder="Share with {{ option.label }}..."

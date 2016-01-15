@@ -1,19 +1,41 @@
-function CustomShareOptionsController($http, $uibModalInstance, customOptions) {
+function CustomShareOptionsController($http, $uibModalInstance, customOptions, resultsMap) {
     var ctrl = this;
 
     // Store resolve value on controller for easy access.
     ctrl.customOptions = customOptions;
+    ctrl.resultsMap = resultsMap;
 
     // Clears the list for a custom sharing option.
     ctrl.clearList = function (option) {
         option.value = [];
     };
 
+    console.log(ctrl.resultsMap[customOptions[0].key]());
+    console.log(ctrl.resultsMap[customOptions[1].key]());
+
     // Access the HTTP resource for a sharing option and
     // returns a promise for the values.
-    ctrl.getResource = function (resource, query) {
-        if (!resource) { return []; }
-        return $http.get(resource, { query: query});
+    ctrl.getSearchResults = function (option, query) {
+        var queryExp = new RegExp(query, "gi");
+
+        if (angular.isArray(option.search_results)) {
+            return option.search_results.filter(function (result) {
+                var related_key = resultsMap[option.key](result);
+                return queryExp.test(result[related_key]);
+            });
+        }
+
+        if (angular.isString(option.search_results)) {
+            return $http.get(option.search_results, { query: query })
+                .then(function (results) {
+                    return results.filter(function (result) {
+                        var related_key = resultsMap[option.key](result);
+                        return queryExp.test(result[related_key]);
+                    });
+                });
+        }
+
+        return [];
     };
 
     // Sends the new custom sharing options configuration
@@ -32,7 +54,7 @@ function CustomShareOptionsFactory($uibModal) {
     var CustomShareOptionsModal = function () {
         this.modalInstance = null;
 
-        this.open = function (customOptions) {
+        this.open = function (customOptions, resultsMap) {
             this.modalInstance = $uibModal.open({
                 templateUrl: 'templates/modal/modal.html',
                 backdrop: true,
@@ -42,6 +64,9 @@ function CustomShareOptionsFactory($uibModal) {
                 resolve: {
                     customOptions: function () {
                         return angular.copy(customOptions);
+                    },
+                    resultsMap: function () {
+                        return resultsMap;
                     }
                 }
             });

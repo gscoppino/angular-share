@@ -55,13 +55,19 @@ function ShareOptionsController(CustomShareOptionsModal) {
                 }
 
             } else if (shareOption.type === 'collection') {
-                customOptions.push(shareOption);
+                // Make sure the custom option has some way
+                // of providing results for searches before adding.
+                if ((angular.isString(shareOption.search_results) || angular.isArray(shareOption.search_results)) &&
+                    (angular.isFunction(ctrl.renderResults[shareOption.key]))) {
 
-                if (shareOption.value.length) {
-                    ctrl.active_options_count++;
+                    customOptions.push(shareOption);
 
-                    if (!ctrl.active_custom_option) {
-                        ctrl.active_custom_option = true;
+                    if (shareOption.value.length) {
+                        ctrl.active_options_count++;
+
+                        if (!ctrl.active_custom_option) {
+                            ctrl.active_custom_option = true;
+                        }
                     }
                 }
             }
@@ -155,7 +161,7 @@ function ShareOptionsController(CustomShareOptionsModal) {
     // options and later return that copy with the new values.
     ctrl.openCustomOptionsModal = function () {
         ctrl.uibDropdownOpen = false; // Close the dropdown control.
-        var modal = CustomShareOptionsModal.open(ctrl.customOptions);
+        var modal = CustomShareOptionsModal.open(ctrl.customOptions, ctrl.renderResults);
 
         modal.result.then(function (customOptions) {
             var checkCustom = false;
@@ -208,7 +214,8 @@ function ShareOptionsDropdown() {
         bindToController: {
             model: '=',
             field: '@',
-            options: '='
+            options: '=',
+            renderResults: '='
         }
     };
 }
