@@ -10,8 +10,27 @@ function CustomShareOptionsController($http, $uibModalInstance, customOptions, r
         option.value = [];
     };
 
-    console.log(ctrl.resultsMap[customOptions[0].key]());
-    console.log(ctrl.resultsMap[customOptions[1].key]());
+    angular.forEach(ctrl.customOptions, function (customOption) {
+        if (angular.isArray(customOption.search_results)) {
+            customOption.value = customOption.value.map(function (shareEntity) {
+                return customOption.search_results.find(function (result) {
+                    if (result.id === shareEntity) {
+                        ctrl.resultsMap[customOption.key](result);
+                    }
+
+                    return result.id === shareEntity;
+                });
+            });
+        } else if (angular.isString(customOption.search_results)) {
+            customOption.value.map(function (shareEntity) {
+                return $http.get(customOption.search_results, { id: shareEntity })
+                    .then(function (val) {
+                        return val;
+                    });
+            });
+        }
+    });
+    console.log(ctrl.customOptions);
 
     // Access the HTTP resource for a sharing option and
     // returns a promise for the values.
