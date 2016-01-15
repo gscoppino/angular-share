@@ -1,3 +1,7 @@
+angular.module('angular-share', [
+    'angular-share.dropdown',
+    'angular-share.modal'
+]);
 function ShareOptionsController(CustomShareOptionsModal) {
 
     if (!angular.isObject(this.model) || !this.field || !angular.isArray(this.options)) { return; }
@@ -199,7 +203,7 @@ function ShareOptionsController(CustomShareOptionsModal) {
     initialize();
 }
 
-function ShareOptionsDirective() {
+function ShareOptionsDropdown() {
     return {
         scope: {},
         template: '\
@@ -242,12 +246,11 @@ function ShareOptionsDirective() {
     };
 }
 
-
-angular.module('angular-share', ['ui.bootstrap', 'angular-share.modal'])
-    .directive('sharingOptions', ShareOptionsDirective);
-
-//=============================================================================//
-
+angular.module('angular-share.dropdown', [
+    'ui.bootstrap',
+    'angular-share.modal'
+])
+    .directive('sharingOptions', ShareOptionsDropdown);
 function CustomShareOptionsController($http, $uibModalInstance, customOptions) {
     var ctrl = this;
 
@@ -334,5 +337,8 @@ function CustomShareOptionsFactory($uibModal) {
     return new CustomShareOptionsModal();
 }
 
-angular.module('angular-share.modal', ['ui.bootstrap', 'material.components.chips'])
+angular.module('angular-share.modal', [
+    'ui.bootstrap',
+    'material.components.chips'
+])
     .factory('CustomShareOptionsModal', CustomShareOptionsFactory);
