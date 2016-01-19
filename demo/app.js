@@ -2,7 +2,7 @@ angular.module('test', ['angular-share', 'ngMaterial'])
     .directive('test', function () {
         return {
             scope: {},
-            template: '<sharing-options model="testCtrl.resourceModel" field="permissions" options="::testCtrl.shareOptions" render-results="::testCtrl.resourceMap"></sharing-options>',
+            template: '<sharing-options model="testCtrl.resourceModel" field="permissions" options="::testCtrl.shareOptions" render-results="::testCtrl.resourceMap" confirm-save="false"></sharing-options>',
             controller: function ($scope) {
                 var ctrl = this;
 
