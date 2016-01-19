@@ -1,6 +1,7 @@
 function ShareOptionsController(CustomShareOptionsModal) {
 
     if (!angular.isObject(this.model) || !this.field || !angular.isArray(this.options)) { return; }
+    this.confirmSave = this.confirmSave || false;
 
     /**************/
 
@@ -16,9 +17,11 @@ function ShareOptionsController(CustomShareOptionsModal) {
     ctrl.customOptions = undefined; // all share options that are collections of entities by nature.
 
     ctrl.active_options_count = 0; // counter to keep track of how many options are set.
-    ctrl.active_toggle_options = []; // array of string for currently active toggle options.
+    ctrl.active_toggle_options = []; // array of strings for currently active toggle options.
 
     ctrl.active_custom_option = undefined; // flag to indicate that custom options are in use.
+
+    ctrl.dirty_options = undefined; // if need to confirm save, keep track of dirty status.
 
     // Initialize.
     function initialize() {
@@ -55,6 +58,7 @@ function ShareOptionsController(CustomShareOptionsModal) {
                 }
 
             } else if (shareOption.type === 'collection') {
+
                 customOptions.push(shareOption);
 
                 if (shareOption.value.length) {
@@ -93,10 +97,9 @@ function ShareOptionsController(CustomShareOptionsModal) {
     };
 
     // Toggles a toggleable sharing option. Updates the bound model
-    // with the new value.
+    // and our view model with the new value.
     ctrl.toggleOption = function (shareOption) {
-        ctrl.model[ctrl.field][shareOption.key] = !shareOption.value; // Update the model
-        shareOption.value = !shareOption.value; // Update the view
+        shareOption.value = !shareOption.value; // Update the view model.
 
         if (shareOption.value === true) {
 
@@ -110,17 +113,28 @@ function ShareOptionsController(CustomShareOptionsModal) {
 
         }
 
+        if (!ctrl.confirmSave) {
+            ctrl.model[ctrl.field][shareOption.key] = shareOption.value; // Update the model
+        } else {
+            ctrl.dirty_options = true;
+        }
+
         ctrl.updateCurrentSettings();
     };
 
     // Sets all toggleable sharing options to false. Updates the bound
-    // model with the new values.
+    // model and our view model with the new values.
     ctrl.clearToggleOptions = function () {
         angular.forEach(ctrl.toggleOptions, function (shareOption) {
-            ctrl.model[ctrl.field][shareOption.key] = false; // Update the model
             if (shareOption.value === true) {
-                shareOption.value = false; // Update the view
+                shareOption.value = false; // Update the view model.
                 ctrl.active_options_count--;
+
+                if (!ctrl.confirmSave) {
+                    ctrl.model[ctrl.field][shareOption.key] = false; // Update the model
+                } else {
+                    ctrl.dirty_options = true;
+                }
             }
         });
 
@@ -132,10 +146,15 @@ function ShareOptionsController(CustomShareOptionsModal) {
     // model with thee new values.
     ctrl.clearCustomOptions = function () {
         angular.forEach(ctrl.customOptions, function (shareOption) {
-            ctrl.model[ctrl.field][shareOption.key] = []; // Update the model
             if (shareOption.value.length) {
                 shareOption.value = []; // Update the view
                 ctrl.active_options_count--;
+
+                if (!ctrl.confirmSave) {
+                    ctrl.model[ctrl.field][shareOption.key] = []; // Update the model
+                } else {
+                    ctrl.dirty_options = true;
+                }
             }
         });
 
@@ -148,6 +167,19 @@ function ShareOptionsController(CustomShareOptionsModal) {
     ctrl.clearSetOptions = function () {
         ctrl.clearToggleOptions();
         ctrl.clearCustomOptions();
+    };
+
+    // Write changes to the origin model field.
+    ctrl.saveChanges = function () {
+        angular.forEach(ctrl.toggleOptions, function (shareOption) {
+            ctrl.model[ctrl.field][shareOption.key] = shareOption.value;
+        });
+
+        angular.forEach(ctrl.customOptions, function (shareOption) {
+            ctrl.model[ctrl.field][shareOption.key] = shareOption.value;
+        });
+
+        ctrl.dirty_options = false;
     };
 
     // Opens the custom sharing options modal, passing it
@@ -178,11 +210,15 @@ function ShareOptionsController(CustomShareOptionsModal) {
                     ctrl.active_options_count--;
                 }
 
-                // Update the original model.
-                ctrl.model[ctrl.field][shareOption.key] = shareOption.value;
-
                 // Set the new custom options on the controller
                 correspondingShareOption.value = shareOption.value;
+
+                // Update the original model.
+                if (!ctrl.confirmSave) {
+                    ctrl.model[ctrl.field][shareOption.key] = shareOption.value;
+                } else {
+                    ctrl.dirty_options = true;
+                }
             });
 
             if (checkCustom) {
@@ -208,7 +244,8 @@ function ShareOptionsDropdown() {
         bindToController: {
             model: '=',
             field: '@',
-            options: '='
+            options: '=',
+            confirmSave: '='
         }
     };
 }
