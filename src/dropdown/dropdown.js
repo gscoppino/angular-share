@@ -163,7 +163,7 @@ function ShareOptionsController(CustomShareOptionsModal) {
         ctrl.uibDropdownOpen = false; // Close the dropdown control.
         var modal = CustomShareOptionsModal.open(ctrl.customOptions, ctrl.renderResults);
 
-        modal.result.then(function (customOptions) {
+        modal.then(function (customOptions) {
             var checkCustom = false;
             angular.forEach(customOptions, function (shareOption) {
 

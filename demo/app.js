@@ -2,7 +2,7 @@ angular.module('test', ['angular-share', 'ngMaterial'])
     .directive('test', function () {
         return {
             scope: {},
-            template: '<sharing-options model="testCtrl.resourceModel" field="permissions" options="::testCtrl.shareOptions"></sharing-options>',
+            template: '<sharing-options model="testCtrl.resourceModel" field="permissions" options="::testCtrl.shareOptions" render-results="::testCtrl.resourceMap"></sharing-options>',
             controller: function ($scope) {
                 var ctrl = this;
 
@@ -40,15 +40,38 @@ angular.module('test', ['angular-share', 'ngMaterial'])
                         key: 'users',
                         label: 'Users',
                         type: 'collection',
-                        value: [1]
+                        value: [1],
+                        search_results: [
+                            { id: 1, first_name: 'John', last_name: 'Doe' },
+                            { id: 2, first_name: 'Jack', last_name: 'Smith' },
+                            { id: 3, first_name: 'Jane', last_name: 'Johnson' }
+                        ]
                     },
                     {
                         key: 'groups',
                         label: 'Groups',
                         type: 'collection',
-                        value: [1, 2]
+                        value: [1, 2],
+                        search_results: [
+                            { id: 1, name: 'Group 1' },
+                            { id: 2, name: 'Group 2' },
+                            { id: 3, name: 'Group 3' }
+                        ]
                     }
                 ];
+
+                ctrl.resourceMap = {
+                    users: function (user) {
+                        if (user) {
+                            user.display_name = user.first_name + ' ' + user.last_name;
+                        }
+
+                        return 'display_name';
+                    },
+                    groups: function () {
+                        return 'name';
+                    }
+                };
             },
             controllerAs: 'testCtrl',
         };
