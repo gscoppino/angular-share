@@ -38,7 +38,7 @@
             livereload: true
         });
 
-        gulp.watch('src/**/*.js', ['build'])
+        gulp.watch('src/*', ['build'])
             .on('change', function (event) {
                 console.log('File' + event.path + ' was ' + event.type + '.');
                 return gulp.src('src/**/*.js')
