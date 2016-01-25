@@ -3,53 +3,39 @@ function CustomShareOptionsController($http, $mdDialog) {
 
     if (!ctrl.customOptions || !ctrl.resultsMap) { return; }
 
+
+    // Resolve indentifiers into objects.
+    angular.forEach(ctrl.customOptions, function (customOption) {
+        if (!angular.isFunction(ctrl.resultsMap[customOption.key]['getByIdentifier'])) {
+            return;
+        }
+
+        angular.forEach(customOption.value, function (shareEntity, index, array) {
+            var value = ctrl.resultsMap[customOption.key]['getByIdentifier'](shareEntity);
+
+            if (angular.isFunction(value.then)) {
+                value.then(function (realValue) {
+                    array[index] = realValue;
+                });
+            }
+
+            array[index] = value;
+
+        });
+    });
+
     // Clears the list for a custom sharing option.
     ctrl.clearList = function (option) {
         option.value = [];
     };
-
-    angular.forEach(ctrl.customOptions, function (customOption) {
-        if (angular.isArray(customOption.search_results)) {
-            customOption.value = customOption.value.map(function (shareEntity) {
-                return customOption.search_results.find(function (result) {
-                    if (result.id === shareEntity) {
-                        ctrl.resultsMap[customOption.key](result);
-                    }
-
-                    return result.id === shareEntity;
-                });
-            });
-        } else if (angular.isString(customOption.search_results)) {
-            customOption.value.map(function (shareEntity) {
-                return $http.get(customOption.search_results, { id: shareEntity })
-                    .then(function (val) {
-                        return val;
-                    });
-            });
-        }
-    });
-    console.log(ctrl.customOptions);
 
     // Access the HTTP resource for a sharing option and
     // returns a promise for the values.
     ctrl.getSearchResults = function (option, query) {
         var queryExp = new RegExp(query, "gi");
 
-        if (angular.isArray(option.search_results)) {
-            return option.search_results.filter(function (result) {
-                var related_key = ctrl.resultsMap[option.key](result);
-                return queryExp.test(result[related_key]);
-            });
-        }
-
-        if (angular.isString(option.search_results)) {
-            return $http.get(option.search_results, { query: query })
-                .then(function (results) {
-                    return results.filter(function (result) {
-                        var related_key = ctrl.resultsMap[option.key](result);
-                        return queryExp.test(result[related_key]);
-                    });
-                });
+        if (angular.isFunction(ctrl.resultsMap[option.key]['search_results'])) {
+            return ctrl.resultsMap[option.key]['search_results'](queryExp);
         }
 
         return [];

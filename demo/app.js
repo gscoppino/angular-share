@@ -2,8 +2,8 @@ angular.module('test', ['angular-share', 'ngMaterial'])
     .directive('test', function () {
         return {
             scope: {},
-            template: '<sharing-options model="testCtrl.resourceModel" field="permissions" options="::testCtrl.shareOptions" render-results="::testCtrl.resourceMap" confirm-save="false"></sharing-options>',
-            controller: function ($scope) {
+            template: '<sharing-options model="testCtrl.resourceModel" field="permissions" options="::testCtrl.shareOptions" resource-map="::testCtrl.resourceMap" confirm-save="false"></sharing-options>',
+            controller: function ($scope, $q) {
                 var ctrl = this;
 
                 ctrl.resourceModel = {
@@ -40,36 +40,60 @@ angular.module('test', ['angular-share', 'ngMaterial'])
                         key: 'users',
                         label: 'Users',
                         type: 'collection',
-                        value: [1],
-                        search_results: [
-                            { id: 1, first_name: 'John', last_name: 'Doe' },
-                            { id: 2, first_name: 'Jack', last_name: 'Smith' },
-                            { id: 3, first_name: 'Jane', last_name: 'Johnson' }
-                        ]
+                        value: [1]
                     },
                     {
                         key: 'groups',
                         label: 'Groups',
                         type: 'collection',
-                        value: [1, 2],
-                        search_results: [
-                            { id: 1, name: 'Group 1' },
-                            { id: 2, name: 'Group 2' },
-                            { id: 3, name: 'Group 3' }
-                        ]
+                        value: [1, 2]
                     }
                 ];
 
-                ctrl.resourceMap = {
-                    users: function (user) {
-                        if (user) {
-                            user.display_name = user.first_name + ' ' + user.last_name;
-                        }
+                var usersList = [
+                    { id: 1, first_name: 'John', last_name: 'Doe' },
+                    { id: 2, first_name: 'Jack', last_name: 'Smith' },
+                    { id: 3, first_name: 'Jane', last_name: 'Johnson' }
+                ];
 
-                        return 'display_name';
+                var groupsListPromise = $q.resolve([
+                    { id: 1, name: 'Group 1' },
+                    { id: 2, name: 'Group 2' },
+                    { id: 3, name: 'Group 3' }
+                ]);
+
+                ctrl.resourceMap = {
+                    users: {
+                        display_field: 'display_name',
+                        getByIdentifier: function (id) {
+                            return usersList.find(function (user) {
+                                user.display_name = user.first_name + ' ' + user.last_name;
+                                return user.id === id;
+                            });
+                        },
+                        search_results: function (queryExp) {
+                            return usersList.filter(function (user) {
+                                user.display_name = user.first_name + ' ' + user.last_name;
+                                return queryExp.test(user.display_name);
+                            });
+                        }
                     },
-                    groups: function () {
-                        return 'name';
+                    groups: {
+                        display_field: 'name',
+                        getByIdentifier: function (id) {
+                            return groupsListPromise.then(function (groupsList) {
+                                return groupsList.find(function (group) {
+                                    return group.id === id;
+                                });
+                            });
+                        },
+                        search_results: function (queryExp) {
+                            return groupsListPromise.then(function (groupsList) {
+                                return groupsList.filter(function (group) {
+                                    return queryExp.test(group.name);
+                                });
+                            });
+                        }
                     }
                 };
             },
