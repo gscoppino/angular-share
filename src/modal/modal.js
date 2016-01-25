@@ -44,7 +44,18 @@ function CustomShareOptionsController($http, $mdDialog) {
     // Sends the new custom sharing options configuration
     // to the callee.
     ctrl.propagateChanges = function () {
-        $mdDialog.confirm(ctrl.customOptions); // pass the custom permissions back.
+        var retOptions = angular.copy(ctrl.customOptions);
+        angular.forEach(retOptions, function (customOption) {
+            if (!ctrl.collectionMap[customOption.key]['id_field']) {
+                return;
+            }
+
+            angular.forEach(customOption.value, function (shareEntity, index, array) {
+                array[index] = shareEntity[ctrl.collectionMap[customOption.key]['id_field']];
+            });
+        });
+
+        $mdDialog.hide(retOptions); // pass the custom permissions back.
     };
 
     // Dismisses the modal.

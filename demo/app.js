@@ -64,6 +64,7 @@ angular.module('test', ['angular-share', 'ngMaterial'])
 
                 ctrl.collectionMap = {
                     users: {
+                        id_field: 'id',
                         display_field: 'display_name',
                         getByIdentifier: function (id) {
                             return usersList.find(function (user) {
@@ -79,6 +80,7 @@ angular.module('test', ['angular-share', 'ngMaterial'])
                         }
                     },
                     groups: {
+                        id_field: 'id',
                         display_field: 'name',
                         getByIdentifier: function (id) {
                             return groupsListPromise.then(function (groupsList) {
