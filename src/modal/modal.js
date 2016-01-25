@@ -1,17 +1,17 @@
 function CustomShareOptionsController($http, $mdDialog) {
     var ctrl = this;
 
-    if (!ctrl.customOptions || !ctrl.resultsMap) { return; }
+    if (!ctrl.customOptions || !ctrl.collectionMap) { return; }
 
 
     // Resolve indentifiers into objects.
     angular.forEach(ctrl.customOptions, function (customOption) {
-        if (!angular.isFunction(ctrl.resultsMap[customOption.key]['getByIdentifier'])) {
+        if (!angular.isFunction(ctrl.collectionMap[customOption.key]['getByIdentifier'])) {
             return;
         }
 
         angular.forEach(customOption.value, function (shareEntity, index, array) {
-            var value = ctrl.resultsMap[customOption.key]['getByIdentifier'](shareEntity);
+            var value = ctrl.collectionMap[customOption.key]['getByIdentifier'](shareEntity);
 
             if (angular.isFunction(value.then)) {
                 value.then(function (realValue) {
@@ -34,8 +34,8 @@ function CustomShareOptionsController($http, $mdDialog) {
     ctrl.getSearchResults = function (option, query) {
         var queryExp = new RegExp(query, "gi");
 
-        if (angular.isFunction(ctrl.resultsMap[option.key]['search_results'])) {
-            return ctrl.resultsMap[option.key]['search_results'](queryExp);
+        if (angular.isFunction(ctrl.collectionMap[option.key]['search_results'])) {
+            return ctrl.collectionMap[option.key]['search_results'](queryExp);
         }
 
         return [];
@@ -57,7 +57,7 @@ function CustomShareOptionsFactory($mdDialog) {
     var CustomShareOptionsModal = function () {
         this.modalInstance = null;
 
-        this.open = function (customOptions, resultsMap) {
+        this.open = function (customOptions, collectionMap) {
             this.modalInstance = $mdDialog.show({
                 templateUrl: 'templates/modal/modal.html',
                 hasBackdrop: true,
@@ -66,7 +66,7 @@ function CustomShareOptionsFactory($mdDialog) {
                 bindToController: true,
                 locals: {
                     customOptions: angular.copy(customOptions),
-                    resultsMap: resultsMap
+                    collectionMap: collectionMap
                 }
             });
 

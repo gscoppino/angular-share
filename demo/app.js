@@ -2,7 +2,7 @@ angular.module('test', ['angular-share', 'ngMaterial'])
     .directive('test', function () {
         return {
             scope: {},
-            template: '<sharing-options model="testCtrl.resourceModel" field="permissions" options="::testCtrl.shareOptions" resource-map="::testCtrl.resourceMap" confirm-save="false"></sharing-options>',
+            template: '<sharing-options model="testCtrl.resourceModel" field="permissions" options="::testCtrl.shareOptions" collection-map="::testCtrl.collectionMap" confirm-save="false"></sharing-options>',
             controller: function ($scope, $q) {
                 var ctrl = this;
 
@@ -62,7 +62,7 @@ angular.module('test', ['angular-share', 'ngMaterial'])
                     { id: 3, name: 'Group 3' }
                 ]);
 
-                ctrl.resourceMap = {
+                ctrl.collectionMap = {
                     users: {
                         display_field: 'display_name',
                         getByIdentifier: function (id) {

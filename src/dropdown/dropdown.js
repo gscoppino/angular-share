@@ -58,7 +58,7 @@ function ShareOptionsController(CustomShareOptionsModal) {
                 }
 
             } else if (shareOption.type === 'collection') {
-                if (!ctrl.resourceMap || !ctrl.resourceMap[shareOption.key]) {
+                if (!ctrl.collectionMap || !ctrl.collectionMap[shareOption.key]) {
                     return;
                 }
 
@@ -190,7 +190,7 @@ function ShareOptionsController(CustomShareOptionsModal) {
     // options and later return that copy with the new values.
     ctrl.openCustomOptionsModal = function () {
         ctrl.uibDropdownOpen = false; // Close the dropdown control.
-        var modal = CustomShareOptionsModal.open(ctrl.customOptions, ctrl.resourceMap);
+        var modal = CustomShareOptionsModal.open(ctrl.customOptions, ctrl.collectionMap);
 
         modal.then(function (customOptions) {
             var checkCustom = false;
@@ -248,7 +248,7 @@ function ShareOptionsDropdown() {
             model: '=',
             field: '@',
             options: '=',
-            resourceMap: '=',
+            collectionMap: '=',
             confirmSave: '='
         }
     };
