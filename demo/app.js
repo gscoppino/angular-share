@@ -17,12 +17,6 @@ angular.module('test', ['angular-share', 'ngMaterial'])
                     }
                 };
 
-                $scope.$watch(function () {
-                  return ctrl.resourceModel;
-                }, function (newVal, oldVal) {
-                  console.log("New Model Value: ", newVal);
-                }, true);
-
                 ctrl.shareOptions = [
                     {
                         key: 'family',
@@ -98,6 +92,14 @@ angular.module('test', ['angular-share', 'ngMaterial'])
                         }
                     }
                 };
+
+                // Watch the destination model for changes and print when a change occurs.
+                // Demo's how the share options directives work.
+                $scope.$watch(function () {
+                  return ctrl.resourceModel;
+                }, function (newVal, oldVal) {
+                  console.log("New Model Value: ", newVal);
+                }, true);
             },
             controllerAs: 'testCtrl',
         };
