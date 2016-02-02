@@ -1,104 +1,10 @@
+angular.module("angular-share.templates", []).run(["$templateCache", function($templateCache) {$templateCache.put("templates/dropdown/dropdown.html","<div class=\"btn-group\">\r\n  <div class=\"btn-group\">\r\n    <div uib-dropdown auto-close=\"outsideClick\" is-open=\"ctrl.uibDropdownOpen\">\r\n      <button type=\"button\" class=\"btn btn-default\" uib-dropdown-toggle>\r\n        <span>{{ ctrl.currentSettings }}</span>\r\n        <span class=\"caret\"></span>\r\n      </button>\r\n      <ul class=\"uib-dropdown-menu\">\r\n        <li ng-click=\"ctrl.clearSetOptions()\">\r\n          <a>\r\n            <span class=\"fa\" ng-class=\"{\'fa-check-square-o\': ctrl.active_options_count === 0, \'fa-square-o\': ctrl.active_options_count > 0}\"></span>\r\n            <span>Only Me</span>\r\n          </a>\r\n        </li>\r\n        <li ng-if=\"ctrl.toggleOptions.length\" class=\"divider\"></li>\r\n        <li ng-repeat=\"option in ::ctrl.toggleOptions track by option.key\" ng-click=\"ctrl.toggleOption(option)\">\r\n          <a>\r\n            <span class=\"fa\" ng-class=\"{\'fa-check-square-o\': option.value, \'fa-square-o\': !option.value}\"></span>\r\n            <span>{{ option.label }}</span>\r\n          </a>\r\n        </li>\r\n        <li ng-if=\"ctrl.customOptions.length\" class=\"divider\"></li>\r\n        <li ng-if=\"ctrl.customOptions.length\" ng-click=\"ctrl.openCustomOptionsModal()\">\r\n          <a>\r\n            <span class=\"fa fa-cog\"></span>\r\n            <span>Custom</span>\r\n          </a>\r\n        </li>\r\n      </ul>\r\n    </div>\r\n  </div>\r\n  <button type=\"button\" ng-if=\"::ctrl.confirmSave\" ng-disabled=\"!ctrl.dirty_options\" ng-click=\"ctrl.saveChanges()\" class=\"btn btn-primary\">Save Changes</button>\r\n</div>");
+$templateCache.put("templates/modal/modal.html","<md-dialog style=\"margin-bottom: 0;\" class=\"panel panel-primary\">\r\n    <div class=\"panel-heading\">\r\n        <h2>Who Can See This?</h2>\r\n    </div>\r\n    <div class=\"panel-body\">\r\n        <div style=\"margin: 1em;\" ng-repeat=\"option in ::ctrl.customOptions track by option.key\">\r\n            <label>{{ ::option.label }}</label>\r\n            <button class=\"btn btn-primary btn-xs\" ng-click=\"ctrl.clearList(option)\">Remove All</button>\r\n            <md-contact-chips\r\n                ng-model=\"option.value\"\r\n                md-contacts=\"ctrl.getSearchResults(option, $query)\"\r\n                md-contact-name=\"{{ ::ctrl.collectionMap[option.key][\'display_field\'] }}\"\r\n                md-require-match=\"true\"\r\n                filter-selected=\"true\"\r\n                placeholder=\"Share with {{ ::option.label }}...\"\r\n                secondary-placeholder=\"Add {{ ::option.label }}...\">\r\n            </md-contact-chips>\r\n        </div>\r\n        <div class=\"text-right\">\r\n            <button type=\"button\" class=\"btn btn-primary\" ng-click=\"ctrl.close()\">Cancel</button>\r\n            <button type=\"button\" class=\"btn btn-success\" ng-click=\"ctrl.propagateChanges()\">OK</button>\r\n        </div>\r\n    </div>\r\n</md-dialog>");}]);
 angular.module('angular-share', [
     'angular-share.dropdown',
     'angular-share.modal',
     'angular-share.templates'
 ]);
-function CustomShareOptionsController($http, $mdDialog) {
-    var ctrl = this;
-
-    if (!ctrl.customOptions || !ctrl.collectionMap) { return; }
-
-
-    // Resolve indentifiers into objects.
-    angular.forEach(ctrl.customOptions, function (customOption) {
-        if (!angular.isFunction(ctrl.collectionMap[customOption.key]['getByIdentifier'])) {
-            return;
-        }
-
-        angular.forEach(customOption.value, function (shareEntity, index, array) {
-            var value = ctrl.collectionMap[customOption.key]['getByIdentifier'](shareEntity);
-
-            if (angular.isFunction(value.then)) {
-                value.then(function (realValue) {
-                    array[index] = realValue;
-                });
-            }
-
-            array[index] = value;
-
-        });
-    });
-
-    // Clears the list for a custom sharing option.
-    ctrl.clearList = function (option) {
-        option.value = [];
-    };
-
-    // Access the HTTP resource for a sharing option and
-    // returns a promise for the values.
-    ctrl.getSearchResults = function (option, query) {
-        var queryExp = new RegExp(query, "gi");
-
-        if (angular.isFunction(ctrl.collectionMap[option.key]['search_results'])) {
-            return ctrl.collectionMap[option.key]['search_results'](queryExp);
-        }
-
-        return [];
-    };
-
-    // Sends the new custom sharing options configuration
-    // to the callee.
-    ctrl.propagateChanges = function () {
-        var retOptions = angular.copy(ctrl.customOptions);
-        angular.forEach(retOptions, function (customOption) {
-            if (!ctrl.collectionMap[customOption.key]['id_field']) {
-                return;
-            }
-
-            angular.forEach(customOption.value, function (shareEntity, index, array) {
-                array[index] = shareEntity[ctrl.collectionMap[customOption.key]['id_field']];
-            });
-        });
-
-        $mdDialog.hide(retOptions); // pass the custom permissions back.
-    };
-
-    // Dismisses the modal.
-    ctrl.close = function () {
-        $mdDialog.cancel('cancel');
-    };
-}
-
-function CustomShareOptionsFactory($mdDialog) {
-    var CustomShareOptionsModal = function () {
-        this.modalInstance = null;
-
-        this.open = function (customOptions, collectionMap) {
-            this.modalInstance = $mdDialog.show({
-                templateUrl: 'templates/modal/modal.html',
-                hasBackdrop: true,
-                controller: CustomShareOptionsController,
-                controllerAs: 'ctrl',
-                bindToController: true,
-                locals: {
-                    customOptions: angular.copy(customOptions),
-                    collectionMap: collectionMap
-                }
-            });
-
-            return this.modalInstance;
-        };
-    };
-
-    return new CustomShareOptionsModal();
-}
-
-angular.module('angular-share.modal', [
-    'ui.bootstrap',
-    'material.components.chips',
-    'material.components.dialog'
-])
-    .factory('CustomShareOptionsModal', CustomShareOptionsFactory);
 function ShareOptionsController(CustomShareOptionsModal) {
 
     if (!angular.isObject(this.model) || !this.field || !angular.isArray(this.options)) { return; }
@@ -360,5 +266,99 @@ angular.module('angular-share.dropdown', [
     'angular-share.modal'
 ])
     .directive('sharingOptions', ShareOptionsDropdown);
-angular.module("angular-share.templates", []).run(["$templateCache", function($templateCache) {$templateCache.put("templates/modal/modal.html","<md-dialog style=\"margin-bottom: 0;\" class=\"panel panel-primary\">\r\n    <div class=\"panel-heading\">\r\n        <h2>Who Can See This?</h2>\r\n    </div>\r\n    <div class=\"panel-body\">\r\n        <div style=\"margin: 1em;\" ng-repeat=\"option in ::ctrl.customOptions track by option.key\">\r\n            <label>{{ ::option.label }}</label>\r\n            <button class=\"btn btn-primary btn-xs\" ng-click=\"ctrl.clearList(option)\">Remove All</button>\r\n            <md-contact-chips\r\n                ng-model=\"option.value\"\r\n                md-contacts=\"ctrl.getSearchResults(option, $query)\"\r\n                md-contact-name=\"{{ ::ctrl.collectionMap[option.key][\'display_field\'] }}\"\r\n                md-require-match=\"true\"\r\n                filter-selected=\"true\"\r\n                placeholder=\"Share with {{ ::option.label }}...\"\r\n                secondary-placeholder=\"Add {{ ::option.label }}...\">\r\n            </md-contact-chips>\r\n        </div>\r\n        <div class=\"text-right\">\r\n            <button type=\"button\" class=\"btn btn-primary\" ng-click=\"ctrl.close()\">Cancel</button>\r\n            <button type=\"button\" class=\"btn btn-success\" ng-click=\"ctrl.propagateChanges()\">OK</button>\r\n        </div>\r\n    </div>\r\n</md-dialog>");
-$templateCache.put("templates/dropdown/dropdown.html","<div class=\"btn-group\">\r\n  <div class=\"btn-group\">\r\n    <div uib-dropdown auto-close=\"outsideClick\" is-open=\"ctrl.uibDropdownOpen\">\r\n      <button type=\"button\" class=\"btn btn-default\" uib-dropdown-toggle>\r\n        <span>{{ ctrl.currentSettings }}</span>\r\n        <span class=\"caret\"></span>\r\n      </button>\r\n      <ul class=\"uib-dropdown-menu\">\r\n        <li ng-click=\"ctrl.clearSetOptions()\">\r\n          <a href=\"#\">\r\n            <span class=\"fa\" ng-class=\"{\'fa-check-square-o\': ctrl.active_options_count === 0, \'fa-square-o\': ctrl.active_options_count > 0}\"></span>\r\n            <span>Only Me</span>\r\n          </a>\r\n        </li>\r\n        <li ng-if=\"ctrl.toggleOptions.length\" class=\"divider\"></li>\r\n        <li ng-repeat=\"option in ::ctrl.toggleOptions track by option.key\" ng-click=\"ctrl.toggleOption(option)\">\r\n          <a href=\"#\">\r\n            <span class=\"fa\" ng-class=\"{\'fa-check-square-o\': option.value, \'fa-square-o\': !option.value}\"></span>\r\n            <span>{{ option.label }}</span>\r\n          </a>\r\n        </li>\r\n        <li ng-if=\"ctrl.customOptions.length\" class=\"divider\"></li>\r\n        <li ng-if=\"ctrl.customOptions.length\" ng-click=\"ctrl.openCustomOptionsModal()\">\r\n          <a href=\"#\">\r\n            <span class=\"fa fa-cog\"></span>\r\n            <span>Custom</span>\r\n          </a>\r\n        </li>\r\n      </ul>\r\n    </div>\r\n  </div>\r\n  <button type=\"button\" ng-if=\"::ctrl.confirmSave\" ng-disabled=\"!ctrl.dirty_options\" ng-click=\"ctrl.saveChanges()\" class=\"btn btn-primary\">Save Changes</button>\r\n</div>");}]);
+function CustomShareOptionsController($http, $mdDialog) {
+    var ctrl = this;
+
+    if (!ctrl.customOptions || !ctrl.collectionMap) { return; }
+
+
+    // Resolve indentifiers into objects.
+    angular.forEach(ctrl.customOptions, function (customOption) {
+        if (!angular.isFunction(ctrl.collectionMap[customOption.key]['getByIdentifier'])) {
+            return;
+        }
+
+        angular.forEach(customOption.value, function (shareEntity, index, array) {
+            var value = ctrl.collectionMap[customOption.key]['getByIdentifier'](shareEntity);
+
+            if (angular.isFunction(value.then)) {
+                value.then(function (realValue) {
+                    array[index] = realValue;
+                });
+            }
+
+            array[index] = value;
+
+        });
+    });
+
+    // Clears the list for a custom sharing option.
+    ctrl.clearList = function (option) {
+        option.value = [];
+    };
+
+    // Access the HTTP resource for a sharing option and
+    // returns a promise for the values.
+    ctrl.getSearchResults = function (option, query) {
+        var queryExp = new RegExp(query, "gi");
+
+        if (angular.isFunction(ctrl.collectionMap[option.key]['search_results'])) {
+            return ctrl.collectionMap[option.key]['search_results'](queryExp);
+        }
+
+        return [];
+    };
+
+    // Sends the new custom sharing options configuration
+    // to the callee.
+    ctrl.propagateChanges = function () {
+        var retOptions = angular.copy(ctrl.customOptions);
+        angular.forEach(retOptions, function (customOption) {
+            if (!ctrl.collectionMap[customOption.key]['id_field']) {
+                return;
+            }
+
+            angular.forEach(customOption.value, function (shareEntity, index, array) {
+                array[index] = shareEntity[ctrl.collectionMap[customOption.key]['id_field']];
+            });
+        });
+
+        $mdDialog.hide(retOptions); // pass the custom permissions back.
+    };
+
+    // Dismisses the modal.
+    ctrl.close = function () {
+        $mdDialog.cancel('cancel');
+    };
+}
+
+function CustomShareOptionsFactory($mdDialog) {
+    var CustomShareOptionsModal = function () {
+        this.modalInstance = null;
+
+        this.open = function (customOptions, collectionMap) {
+            this.modalInstance = $mdDialog.show({
+                templateUrl: 'templates/modal/modal.html',
+                hasBackdrop: true,
+                controller: CustomShareOptionsController,
+                controllerAs: 'ctrl',
+                bindToController: true,
+                locals: {
+                    customOptions: angular.copy(customOptions),
+                    collectionMap: collectionMap
+                }
+            });
+
+            return this.modalInstance;
+        };
+    };
+
+    return new CustomShareOptionsModal();
+}
+
+angular.module('angular-share.modal', [
+    'ui.bootstrap',
+    'material.components.chips',
+    'material.components.dialog'
+])
+    .factory('CustomShareOptionsModal', CustomShareOptionsFactory);
