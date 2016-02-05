@@ -58,6 +58,8 @@ function ShareOptionsController(CustomShareOptionsModal) {
                 }
 
             } else if (shareOption.type === 'collection') {
+                // The sharing option won't have any functionality
+                // unless a configuration is specified for it.
                 if (!ctrl.collectionMap || !ctrl.collectionMap[shareOption.key]) {
                     return;
                 }
