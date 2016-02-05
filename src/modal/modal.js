@@ -1,61 +1,70 @@
-function CustomShareOptionsController($http, $mdDialog) {
+function CustomShareOptionsController($mdDialog, $q, _CustomShareOptions, _OptionsConfig) {
+    if (!_CustomShareOptions || !_OptionsConfig) { return; }
+
     var ctrl = this;
 
-    if (!ctrl.customOptions || !ctrl.collectionMap) { return; }
+    ctrl.optionsConfig = _OptionsConfig;
+    ctrl.customOptions = _CustomShareOptions
+        .filter(function (customOption) {
+            // The configuration must be fully and correctly defined
+            // for all custom options.
+            var valid_option = (
+                angular.isString(ctrl.optionsConfig[customOption.key]['id_field']) &&
+                angular.isString(ctrl.optionsConfig[customOption.key]['display_field']) &&
+                angular.isFunction(ctrl.optionsConfig[customOption.key]['getByIdentifier']) &&
+                angular.isFunction(ctrl.optionsConfig[customOption.key]['getSearchResults'])
+            );
 
+            if (valid_option) { return true; }
+        })
+        .map(function (customOption) {
+            // Create a shallow copy of the custom option
+            var mapped_option = {
+                key: customOption.key,
+                label: customOption.label,
+                type: customOption.type,
+                value: []
+            };
 
-    // Resolve indentifiers into objects.
-    angular.forEach(ctrl.customOptions, function (customOption) {
-        if (!angular.isFunction(ctrl.collectionMap[customOption.key]['getByIdentifier'])) {
-            return;
-        }
+            // Map custom option identifiers to their resolved forms
+            $q.all(customOption.value.map(function (identifier) {
+                return $q.resolve(ctrl.optionsConfig[customOption.key].getByIdentifier(identifier));
+            })).then(function (resolvedValues) {
+                Array.prototype.push.apply(mapped_option.value, resolvedValues);
+            });
 
-        angular.forEach(customOption.value, function (shareEntity, index, array) {
-            var value = ctrl.collectionMap[customOption.key]['getByIdentifier'](shareEntity);
-
-            if (angular.isFunction(value.then)) {
-                value.then(function (realValue) {
-                    array[index] = realValue;
-                });
-            }
-
-            array[index] = value;
-
+            return mapped_option;
         });
-    });
 
     // Clears the list for a custom sharing option.
     ctrl.clearList = function (option) {
         option.value = [];
     };
 
-    // Access the HTTP resource for a sharing option and
-    // returns a promise for the values.
+    // Request search results for the custom sharing option
+    // using the config.
     ctrl.getSearchResults = function (option, query) {
         var queryExp = new RegExp(query, "gi");
-
-        if (angular.isFunction(ctrl.collectionMap[option.key]['search_results'])) {
-            return ctrl.collectionMap[option.key]['search_results'](queryExp);
-        }
-
-        return [];
+        return ctrl.optionsConfig[option.key].getSearchResults(queryExp);
     };
 
     // Sends the new custom sharing options configuration
     // to the callee.
     ctrl.propagateChanges = function () {
-        var retOptions = angular.copy(ctrl.customOptions);
-        angular.forEach(retOptions, function (customOption) {
-            if (!ctrl.collectionMap[customOption.key]['id_field']) {
-                return;
-            }
-
-            angular.forEach(customOption.value, function (shareEntity, index, array) {
-                array[index] = shareEntity[ctrl.collectionMap[customOption.key]['id_field']];
+        var remapped_options = ctrl.customOptions
+            .map(function (customOption) {
+                var id_field = ctrl.optionsConfig[customOption.key].id_field;
+                return {
+                    key: customOption.key,
+                    label: customOption.label,
+                    type: customOption.type,
+                    value: customOption.value.map(function (resolvedIdentifier) {
+                        return resolvedIdentifier[id_field];
+                    })
+                };
             });
-        });
 
-        $mdDialog.hide(retOptions); // pass the custom permissions back.
+        $mdDialog.hide(remapped_options); // Return the new custom share option values.
     };
 
     // Dismisses the modal.
@@ -74,10 +83,9 @@ function CustomShareOptionsFactory($mdDialog) {
                 hasBackdrop: true,
                 controller: CustomShareOptionsController,
                 controllerAs: 'ctrl',
-                bindToController: true,
                 locals: {
-                    customOptions: angular.copy(customOptions),
-                    collectionMap: collectionMap
+                    _CustomShareOptions: customOptions,
+                    _OptionsConfig: collectionMap
                 }
             });
 

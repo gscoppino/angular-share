@@ -66,7 +66,7 @@ angular.module('test', ['angular-share', 'ngMaterial'])
                                 return user.id === id;
                             });
                         },
-                        search_results: function (queryExp) {
+                        getSearchResults: function (queryExp) {
                             return usersList.filter(function (user) {
                                 user.display_name = user.first_name + ' ' + user.last_name;
                                 return queryExp.test(user.display_name);
@@ -83,7 +83,7 @@ angular.module('test', ['angular-share', 'ngMaterial'])
                                 });
                             });
                         },
-                        search_results: function (queryExp) {
+                        getSearchResults: function (queryExp) {
                             return groupsListPromise.then(function (groupsList) {
                                 return groupsList.filter(function (group) {
                                     return queryExp.test(group.name);

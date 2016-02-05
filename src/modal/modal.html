@@ -9,7 +9,7 @@
             <md-contact-chips
                 ng-model="option.value"
                 md-contacts="ctrl.getSearchResults(option, $query)"
-                md-contact-name="{{ ::ctrl.collectionMap[option.key]['display_field'] }}"
+                md-contact-name="{{ ::ctrl.optionsConfig[option.key]['display_field'] }}"
                 md-require-match="true"
                 filter-selected="true"
                 placeholder="Share with {{ ::option.label }}..."
