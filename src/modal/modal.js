@@ -1,58 +1,95 @@
-function CustomShareOptionsController($http, $uibModalInstance, customOptions) {
+function CustomShareOptionsController($mdDialog, $q, _CustomShareOptions, _OptionsConfig) {
+    if (!_CustomShareOptions || !_OptionsConfig) { return; }
+
     var ctrl = this;
 
-    // Store resolve value on controller for easy access.
-    ctrl.customOptions = customOptions;
+    ctrl.optionsConfig = _OptionsConfig;
+    ctrl.customOptions = _CustomShareOptions
+        .filter(function (customOption) {
+            // The configuration must be fully and correctly defined
+            // for all custom options.
+            var valid_option = (
+                angular.isString(ctrl.optionsConfig[customOption.key]['id_field']) &&
+                angular.isString(ctrl.optionsConfig[customOption.key]['display_field']) &&
+                angular.isFunction(ctrl.optionsConfig[customOption.key]['getByIdentifier']) &&
+                angular.isFunction(ctrl.optionsConfig[customOption.key]['getSearchResults'])
+            );
+
+            if (valid_option) { return true; }
+        })
+        .map(function (customOption) {
+            // Create a shallow copy of the custom option
+            var mapped_option = {
+                key: customOption.key,
+                label: customOption.label,
+                type: customOption.type,
+                value: []
+            };
+
+            // Map custom option identifiers to their resolved forms
+            $q.all(customOption.value.map(function (identifier) {
+                return $q.resolve(ctrl.optionsConfig[customOption.key].getByIdentifier(identifier));
+            })).then(function (resolvedValues) {
+                Array.prototype.push.apply(mapped_option.value, resolvedValues);
+            });
+
+            return mapped_option;
+        });
 
     // Clears the list for a custom sharing option.
     ctrl.clearList = function (option) {
         option.value = [];
     };
 
-    // Access the HTTP resource for a sharing option and
-    // returns a promise for the values.
-    ctrl.getResource = function (resource, query) {
-        if (!resource) { return []; }
-        return $http.get(resource, { query: query});
+    // Request search results for the custom sharing option
+    // using the config.
+    ctrl.getSearchResults = function (option, query) {
+        var queryExp = new RegExp(query, "gi");
+        return ctrl.optionsConfig[option.key].getSearchResults(queryExp);
     };
 
     // Sends the new custom sharing options configuration
     // to the callee.
     ctrl.propagateChanges = function () {
-        $uibModalInstance.close(ctrl.customOptions); // pass the custom permissions back.
+        var remapped_options = ctrl.customOptions
+            .map(function (customOption) {
+                var id_field = ctrl.optionsConfig[customOption.key].id_field;
+                return {
+                    key: customOption.key,
+                    label: customOption.label,
+                    type: customOption.type,
+                    value: customOption.value.map(function (resolvedIdentifier) {
+                        return resolvedIdentifier[id_field];
+                    })
+                };
+            });
+
+        $mdDialog.hide(remapped_options); // Return the new custom share option values.
     };
 
     // Dismisses the modal.
     ctrl.close = function () {
-        $uibModalInstance.dismiss('cancel');
+        $mdDialog.cancel('cancel');
     };
 }
 
-function CustomShareOptionsFactory($uibModal) {
+function CustomShareOptionsFactory($mdDialog) {
     var CustomShareOptionsModal = function () {
         this.modalInstance = null;
 
-        this.open = function (customOptions) {
-            this.modalInstance = $uibModal.open({
+        this.open = function (customOptions, collectionMap) {
+            this.modalInstance = $mdDialog.show({
                 templateUrl: 'templates/modal/modal.html',
-                backdrop: true,
+                hasBackdrop: true,
                 controller: CustomShareOptionsController,
                 controllerAs: 'ctrl',
-                bindToController: true,
-                resolve: {
-                    customOptions: function () {
-                        return angular.copy(customOptions);
-                    }
+                locals: {
+                    _CustomShareOptions: customOptions,
+                    _OptionsConfig: collectionMap
                 }
             });
 
             return this.modalInstance;
-        };
-
-        // Easily accessible helper function for the instantiater of
-        // a modal to conveniently close it.
-        this.close = function () {
-            this.modalInstance.dismiss('terminated');
         };
     };
 
@@ -61,6 +98,7 @@ function CustomShareOptionsFactory($uibModal) {
 
 angular.module('angular-share.modal', [
     'ui.bootstrap',
-    'material.components.chips'
+    'material.components.chips',
+    'material.components.dialog'
 ])
     .factory('CustomShareOptionsModal', CustomShareOptionsFactory);

@@ -7,21 +7,21 @@
       </button>
       <ul class="uib-dropdown-menu">
         <li ng-click="ctrl.clearSetOptions()">
-          <a href="#">
+          <a>
             <span class="fa" ng-class="{'fa-check-square-o': ctrl.active_options_count === 0, 'fa-square-o': ctrl.active_options_count > 0}"></span>
             <span>Only Me</span>
           </a>
         </li>
         <li ng-if="ctrl.toggleOptions.length" class="divider"></li>
         <li ng-repeat="option in ::ctrl.toggleOptions track by option.key" ng-click="ctrl.toggleOption(option)">
-          <a href="#">
+          <a>
             <span class="fa" ng-class="{'fa-check-square-o': option.value, 'fa-square-o': !option.value}"></span>
             <span>{{ option.label }}</span>
           </a>
         </li>
         <li ng-if="ctrl.customOptions.length" class="divider"></li>
         <li ng-if="ctrl.customOptions.length" ng-click="ctrl.openCustomOptionsModal()">
-          <a href="#">
+          <a>
             <span class="fa fa-cog"></span>
             <span>Custom</span>
           </a>

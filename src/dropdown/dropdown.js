@@ -58,6 +58,11 @@ function ShareOptionsController(CustomShareOptionsModal) {
                 }
 
             } else if (shareOption.type === 'collection') {
+                // The sharing option won't have any functionality
+                // unless a configuration is specified for it.
+                if (!ctrl.collectionMap || !ctrl.collectionMap[shareOption.key]) {
+                    return;
+                }
 
                 customOptions.push(shareOption);
 
@@ -187,11 +192,19 @@ function ShareOptionsController(CustomShareOptionsModal) {
     // options and later return that copy with the new values.
     ctrl.openCustomOptionsModal = function () {
         ctrl.uibDropdownOpen = false; // Close the dropdown control.
-        var modal = CustomShareOptionsModal.open(ctrl.customOptions);
+        var modal = CustomShareOptionsModal.open(ctrl.customOptions, ctrl.collectionMap);
 
-        modal.result.then(function (customOptions) {
-            var checkCustom = false;
+        modal.then(function (customOptions) {
+            // Reset custom option flag, we have to re-evaluate
+            // now that custom option values have changed.
+            ctrl.active_custom_option = false;
+
             angular.forEach(customOptions, function (shareOption) {
+
+                // Set custom option flag if any custom options are set.
+                if (shareOption.value.length) {
+                    ctrl.active_custom_option = true;
+                }
 
                 // Diff the old custom options with the new ones
                 // to update active options counter, and whether
@@ -199,10 +212,6 @@ function ShareOptionsController(CustomShareOptionsModal) {
                 var correspondingShareOption = ctrl.customOptions.filter(function (opt) {
                     return opt.key === shareOption.key;
                 })[0];
-
-                if (shareOption.value.length) {
-                    checkCustom = true;
-                }
 
                 if (shareOption.value.length && !correspondingShareOption.value.length) {
                     ctrl.active_options_count++;
@@ -220,12 +229,6 @@ function ShareOptionsController(CustomShareOptionsModal) {
                     ctrl.dirty_options = true;
                 }
             });
-
-            if (checkCustom) {
-                ctrl.active_custom_option = true;
-            } else {
-                ctrl.active_custom_option = false;
-            }
 
             ctrl.updateCurrentSettings();
         });
@@ -245,6 +248,7 @@ function ShareOptionsDropdown() {
             model: '=',
             field: '@',
             options: '=',
+            collectionMap: '=',
             confirmSave: '='
         }
     };
